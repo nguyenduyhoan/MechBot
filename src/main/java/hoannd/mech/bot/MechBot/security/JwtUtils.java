@@ -1,60 +1,57 @@
 package hoannd.mech.bot.MechBot.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import org.springframework.stereotype.Component;
-import javax.crypto.spec.SecretKeySpec;
-import java.security.Key;
+
 import java.util.Date;
 
 @Component
 public class JwtUtils {
-    private static final String SECRET_KEY = "mysecretkeymysecretkeymysecretkey"; // Ít nhất 32 ký tự
-    private static final long ACCESS_TOKEN_EXPIRY = 15 * 60 * 1000; // 15 phút
-    private static final long REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 ngày
 
-    private Key getSigningKey() {
-        return new SecretKeySpec(SECRET_KEY.getBytes(), SignatureAlgorithm.HS256.getJcaName());
-    }
+    private static final String JWT_SECRET = "yourSecretKey";
+    private static final long JWT_EXPIRATION = 15 * 60 * 1000;  // 15 minutes
+    private static final long JWT_REFRESH_EXPIRATION = 7 * 24 * 60 * 60 * 1000;  // 7 days
 
+    // Tạo token JWT
     public String generateAccessToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRY))
-                .signWith(SignatureAlgorithm.HS256, getSigningKey()) // ✅ Cách ký với `jjwt 0.9.1`
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION))
+                .signWith(SignatureAlgorithm.HS512, JWT_SECRET)
                 .compact();
     }
 
+    // Tạo Refresh Token
     public String generateRefreshToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY))
-                .signWith(SignatureAlgorithm.HS256, getSigningKey())
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_REFRESH_EXPIRATION))
+                .signWith(SignatureAlgorithm.HS512, JWT_SECRET)
                 .compact();
     }
 
+    // Trích xuất username từ token
     public String extractUsername(String token) {
-        return getClaims(token).getSubject();
+        // Sử dụng Jwts.parser() thay cho parser().build() trong phiên bản 0.9.1
+        Claims claims = Jwts.parser()
+                .setSigningKey(JWT_SECRET)
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getSubject();
     }
 
+    // Kiểm tra token hợp lệ
     public boolean validateToken(String token) {
         try {
-            getClaims(token);
+            // Sử dụng Jwts.parser() thay cho parser().build() trong phiên bản 0.9.1
+            Jwts.parser()
+                    .setSigningKey(JWT_SECRET)
+                    .parseClaimsJws(token);
             return true;
-        } catch (Exception e) {
+        } catch (JwtException e) {
             return false;
         }
     }
-
-    private Claims getClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(getSigningKey()) // ✅ Thay đổi cách parser với `jjwt 0.9.1`
-                .parseClaimsJws(token)
-                .getBody();
-    }
 }
-
-
