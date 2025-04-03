@@ -1,5 +1,8 @@
-package hoannd.mech.bot.MechBot.security;
+package hoannd.mech.bot.MechBot.config;
 
+import hoannd.mech.bot.MechBot.security.CustomAuthenticationProvider;
+import hoannd.mech.bot.MechBot.security.JwtAuthenticationEntryPoint;
+import hoannd.mech.bot.MechBot.security.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +23,7 @@ public class SecurityConfig {
     private final CustomAuthenticationProvider customAuthenticationProvider;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -37,10 +41,10 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))  // Sử dụng JwtAuthenticationEntryPoint để xử lý lỗi xác thực
                 .build();
     }
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();  // Mã hóa mật khẩu bằng BCrypt
-    }
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//        return new BCryptPasswordEncoder();  // Mã hóa mật khẩu bằng BCrypt
+//    }
 }
 
 
