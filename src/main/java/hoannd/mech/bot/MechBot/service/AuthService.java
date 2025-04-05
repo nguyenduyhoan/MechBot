@@ -1,26 +1,44 @@
 package hoannd.mech.bot.MechBot.service;
 
+import hoannd.mech.bot.MechBot.dto.LoginRequest;
 import hoannd.mech.bot.MechBot.dto.RegisterRequest;
 import hoannd.mech.bot.MechBot.model.Role;
 import hoannd.mech.bot.MechBot.model.RoleName;
 import hoannd.mech.bot.MechBot.model.User;
 import hoannd.mech.bot.MechBot.repository.RoleRepository;
 import hoannd.mech.bot.MechBot.repository.UserRepository;
+import hoannd.mech.bot.MechBot.security.JwtUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 
 @Service
 public class AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtils jwtUtils; // 👈 thêm dòng này
 
-    public AuthService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    @Autowired
+    private AuthenticationManager authManager;
+
+    public AuthService(UserRepository userRepository,
+                       RoleRepository roleRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtUtils jwtUtils) { // 👈 truyền vào constructor
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtils = jwtUtils;
     }
 
     public String registerUser(RegisterRequest request) {
@@ -51,4 +69,28 @@ public class AuthService {
         userRepository.save(user);
         return "User registered successfully!";
     }
+
+    public Map<String, String> login(LoginRequest request) {
+        try {
+            // Xác thực thông tin người dùng
+            Authentication auth = authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
+
+            UserDetails user = (UserDetails) auth.getPrincipal();
+
+            // Tạo access token và refresh token
+            String accessToken = jwtUtils.generateAccessToken(user.getUsername());
+            String refreshToken = jwtUtils.generateRefreshToken(user.getUsername());
+
+            // Trả về token dưới dạng map
+            Map<String, String> tokens = new HashMap<>();
+            tokens.put("accessToken", accessToken);
+            tokens.put("refreshToken", refreshToken);
+            return tokens;
+        } catch (BadCredentialsException e) {
+            throw new BadCredentialsException("Invalid username or password");
+        }
+    }
+
 }
