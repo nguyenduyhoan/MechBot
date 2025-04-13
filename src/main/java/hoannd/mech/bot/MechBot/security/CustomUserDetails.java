@@ -23,7 +23,7 @@ public class CustomUserDetails implements UserDetails {
                 .map(role -> new SimpleGrantedAuthority(role.getName().name())) // fix chỗ này
                 .collect(Collectors.toList());
     }
-    
+
     @Override
     public String getPassword() {
         return user.getPassword();

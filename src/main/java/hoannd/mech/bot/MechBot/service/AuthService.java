@@ -2,6 +2,7 @@ package hoannd.mech.bot.MechBot.service;
 
 import hoannd.mech.bot.MechBot.dto.LoginRequest;
 import hoannd.mech.bot.MechBot.dto.RegisterRequest;
+import hoannd.mech.bot.MechBot.dto.ResetPasswordRequest;
 import hoannd.mech.bot.MechBot.model.Role;
 import hoannd.mech.bot.MechBot.model.RoleName;
 import hoannd.mech.bot.MechBot.model.User;
@@ -91,6 +92,16 @@ public class AuthService {
         } catch (BadCredentialsException e) {
             throw new BadCredentialsException("Invalid username or password");
         }
+    }
+
+    public String resetPassword(ResetPasswordRequest request) {
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return "Password has been reset successfully";
     }
 
 }
