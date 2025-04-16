@@ -58,6 +58,7 @@ public class SecurityConfig {
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()  // Cho phép truy cập API xác thực
+                        .requestMatchers("/api/vocab/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Chỉ ADMIN mới có quyền truy cập
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")  // USER & ADMIN đều có quyền
                         .anyRequest().authenticated()  // Các yêu cầu khác đều phải xác thực
